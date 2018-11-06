@@ -1,13 +1,12 @@
 #!/bin/bash
-#Version: 0.6.3
+#Version: 0.1
 
-echo "Welcome to CloudCone SSH Key Installer"
+echo "Welcome to SSH Key Installer"
 
-#check count of parameters. We need only 1, which is key id
 if [ $# -eq 0 -o $# -gt 2 ]; then
-	echo "Welcome to CloudCone SSH Key Installer"
-	echo " Installs selected SSH keys from CloudCone portal"
-	echo " - Usage: $0 {key_id} [-p]"; exit 1;
+	echo "Welcome to SSH Key Installer"
+	echo " Installs selected SSH keys"
+	echo " - Usage: $0 {GitHub_ID} [-p]"; exit 1;
 fi
 KEY_ID=${1}
 DISABLE_PW_LOGIN=0
@@ -20,10 +19,24 @@ if [ $EUID -ne 0 ]; then
 	echo 'Error: you need to be root to run this script'; exit 1;
 fi
 
-if [ ! -f "${HOME}/.ssh/authorized_keys" ]; then
-	echo "Info: ~/.ssh/authorized_keys is missing ...";
+#get key from GitHub
+echo "Get key from GitHub..."
+curl https://github.com/${KEY_ID}.keys >/tmp/key.txt 2>/dev/null
 
-	echo "Creating ${HOME}/.ssh/authorized_keys ..."
+PUB_KEY=$(cat /tmp/key.txt)
+
+if [ "${PUB_KEY}" == 'Not Found' ]; then
+	echo "Error: GitHub account not found"; exit 1;
+fi
+
+if [ "${PUB_KEY}" == '' ]; then
+	echo "Error: Key not found"; exit 1;
+fi
+
+if [ ! -f "${HOME}/.ssh/authorized_keys" ]; then
+	echo "${HOME}/.ssh/authorized_keys is missing...";
+
+	echo "Creating ${HOME}/.ssh/authorized_keys..."
 	mkdir -p ${HOME}/.ssh/
 	touch ${HOME}/.ssh/authorized_keys
 
@@ -34,32 +47,18 @@ if [ ! -f "${HOME}/.ssh/authorized_keys" ]; then
 	fi
 fi
 
-#get key from server
-curl -D /tmp/headers.txt --data "${KEY_ID}" https://app.cloudcone.com/ssh/download >/tmp/key.txt 2>/dev/null
-HTTP_CODE=$(sed -n 's/HTTP\/1\.[0-9] \([0-9]\+\).*/\1/p' /tmp/headers.txt | tail -n 1)
-if [ $HTTP_CODE -ne 200 ]; then
-	echo "Error: CloudCone API server went away"; exit 1;
-fi
-PUB_KEY=$(cat /tmp/key.txt)
-
-if [ "${PUB_KEY}" == '0' ]; then
-	echo "Error: Key ${KEY_ID} wasn't found on CloudCone Key Manager"; exit 1;
-fi
-
-if [ $(grep -m 1 -c "${PUB_KEY}" ${HOME}/.ssh/authorized_keys) -eq 1 ]; then
-	echo 'Warning: Key is already installed'; exit 1;
-fi
-
 #install key
 echo -e "\n${PUB_KEY}\n" >> ${HOME}/.ssh/authorized_keys
 rm -rf /tmp/key.txt
 rm -rf /tmp/headers.txt
 echo 'Key installed successfully'
-echo 'Thanks, CloudCone Key Installer'
 
 #disable root password
 if [ ${DISABLE_PW_LOGIN} -eq 1 ]; then
-	sed -i.save 's/^#?PasswordAuthentication .*/PasswordAuthentication no/' /etc/ssh/sshd_config
+	sed -i "/PasswordAuthentication no/c PasswordAuthentication no" /etc/ssh/sshd_config
+	sed -i "/PasswordAuthentication yes/c PasswordAuthentication no" /etc/ssh/sshd_config
+	service sshd restart
 	echo 'Disabled password login in SSH'
-	echo 'Restart SSHd manually!'
 fi
+#delete script
+rm -rf $0
