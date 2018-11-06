@@ -50,7 +50,6 @@ fi
 #install key
 echo -e "\n${PUB_KEY}\n" >> ${HOME}/.ssh/authorized_keys
 rm -rf /tmp/key.txt
-rm -rf /tmp/headers.txt
 echo 'Key installed successfully'
 
 #disable root password
