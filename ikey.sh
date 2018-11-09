@@ -1,12 +1,11 @@
 #!/bin/bash
-#Version: 0.1
+#Version: 0.2
 
 echo "Welcome to SSH Key Installer"
 
 if [ $# -eq 0 -o $# -gt 2 ]; then
-	echo "Welcome to SSH Key Installer"
-	echo " Installs selected SSH keys"
-	echo " - Usage: $0 {GitHub_ID} [-p]"; exit 1;
+	echo "Installs selected SSH keys from GitHub"
+	echo "- Usage: $0 {GitHub_ID} [-p]"; exit 1;
 fi
 KEY_ID=${1}
 DISABLE_PW_LOGIN=0
@@ -20,6 +19,7 @@ if [ $EUID -ne 0 ]; then
 fi
 
 #get key from GitHub
+echo "The GitHub account is: ${KEY_ID}"
 echo "Get key from GitHub..."
 curl https://github.com/${KEY_ID}.keys >/tmp/key.txt 2>/dev/null
 
@@ -59,5 +59,3 @@ if [ ${DISABLE_PW_LOGIN} -eq 1 ]; then
 	service sshd restart
 	echo 'Disabled password login in SSH'
 fi
-#delete script
-rm -rf $0
