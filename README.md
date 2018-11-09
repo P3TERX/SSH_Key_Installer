@@ -1,3 +1,4 @@
+# 一键为 VPS 配置 SSH 密钥登录
 打开 [GitHub 密钥管理页面](https://github.com/settings/ssh/new) 添加你的公钥
 
 然后输入以下命令
