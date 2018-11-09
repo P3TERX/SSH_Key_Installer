@@ -1,16 +1,21 @@
 #!/bin/bash
-#Version: 0.2
+#Version: 0.3
 
 echo "Welcome to SSH Key Installer"
 
 if [ $# -eq 0 -o $# -gt 2 ]; then
 	echo "Installs selected SSH keys from GitHub"
-	echo "- Usage: $0 {GitHub_ID} [-p]"; exit 1;
+	echo "- Usage: $0 {GitHub_ID} [-p] [-a]"; exit 1;
 fi
 KEY_ID=${1}
 DISABLE_PW_LOGIN=0
-if [ $# -eq 2 -a "$2" == '-p' ]; then
+KEY_ADD=0
+if [ $# -eq 2 -a "$2" == '-p' ] || [ $# -eq 3 -a "$3" == '-p' ]; then
 	DISABLE_PW_LOGIN=1
+fi
+
+if [ $# -eq 2 -a "$2" == '-a' ] || [ $# -eq 3 -a "$3" == '-a' ]; then
+	KEY_ADD=1
 fi
 
 #check if we are root
@@ -48,8 +53,15 @@ if [ ! -f "${HOME}/.ssh/authorized_keys" ]; then
 fi
 
 #install key
-echo -e "\n${PUB_KEY}\n" >> ${HOME}/.ssh/authorized_keys
+if [ ${KEY_ADD} -eq 1 ]; then
+	echo "Additional keys..."
+	echo -e "\n${PUB_KEY}\n" >> ${HOME}/.ssh/authorized_keys
+else
+	echo -e "${PUB_KEY}\n" > ${HOME}/.ssh/authorized_keys
+fi
 rm -rf /tmp/key.txt
+chmod 700 ${HOME}/.ssh/
+chmod 600 ${HOME}/.ssh/authorized_keys
 echo 'Key installed successfully'
 
 #disable root password
