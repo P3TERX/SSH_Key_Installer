@@ -1,21 +1,37 @@
 #!/bin/bash
-#Version: 0.3
+#Description: Install SSH key from GitHub Account
+#Version: 1.0
+#Author: P3TERX
+#Blog: https://p3terx.com
 
-echo "Welcome to SSH Key Installer"
-
-if [ $# -eq 0 -o $# -gt 2 ]; then
-	echo "Installs selected SSH keys from GitHub"
-	echo "- Usage: $0 {GitHub_ID} [-p] [-a]"; exit 1;
-fi
 KEY_ID=${1}
 DISABLE_PW_LOGIN=0
 KEY_ADD=0
-if [ $# -eq 2 -a "$2" == '-p' ] || [ $# -eq 3 -a "$3" == '-p' ]; then
-	DISABLE_PW_LOGIN=1
+USAGE='- Usage: bash <(curl -Ls https://git.io/ikey.sh) {GitHub_ID} [-p] [-a]'
+
+echo "Welcome to SSH Key Installer"
+
+if [ $# -eq 0 -o $# -gt 3 ]; then
+	echo "Install SSH key from GitHub Account."
+	echo $USAGE; exit 1;
 fi
 
-if [ $# -eq 2 -a "$2" == '-a' ] || [ $# -eq 3 -a "$3" == '-a' ]; then
+if [ "$2" == '-p' ]; then
+	DISABLE_PW_LOGIN=1
+elif [ "$2" == '-a' ]; then
 	KEY_ADD=1
+elif [ $2 ]; then
+	echo "Error: Please enter the correct parameters."
+	echo $USAGE; exit 1;
+fi
+
+if [ "$3" == '-p' ]; then
+	DISABLE_PW_LOGIN=1
+elif [ "$3" == '-a' ]; then
+	KEY_ADD=1
+elif [ $3 ]; then
+	echo "Error: Please enter the correct parameters."
+	echo $USAGE; exit 1;
 fi
 
 #check if we are root
@@ -32,9 +48,7 @@ PUB_KEY=$(cat /tmp/key.txt)
 
 if [ "${PUB_KEY}" == 'Not Found' ]; then
 	echo "Error: GitHub account not found"; exit 1;
-fi
-
-if [ "${PUB_KEY}" == '' ]; then
+elif [ "${PUB_KEY}" == '' ]; then
 	echo "Error: Key not found"; exit 1;
 fi
 
@@ -54,7 +68,7 @@ fi
 
 #install key
 if [ ${KEY_ADD} -eq 1 ]; then
-	echo "Additional keys..."
+	echo "Additional SSH key..."
 	echo -e "\n${PUB_KEY}\n" >> ${HOME}/.ssh/authorized_keys
 else
 	echo -e "${PUB_KEY}\n" > ${HOME}/.ssh/authorized_keys
@@ -62,12 +76,12 @@ fi
 rm -rf /tmp/key.txt
 chmod 700 ${HOME}/.ssh/
 chmod 600 ${HOME}/.ssh/authorized_keys
-echo 'Key installed successfully'
+echo "SSH Key installed successfully!"
 
 #disable root password
 if [ ${DISABLE_PW_LOGIN} -eq 1 ]; then
+	echo "Disabled password login in SSH"
 	sed -i "/PasswordAuthentication no/c PasswordAuthentication no" /etc/ssh/sshd_config
 	sed -i "/PasswordAuthentication yes/c PasswordAuthentication no" /etc/ssh/sshd_config
 	service sshd restart
-	echo 'Disabled password login in SSH'
 fi

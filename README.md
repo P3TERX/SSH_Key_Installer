@@ -1,12 +1,16 @@
-# 一键为 VPS 配置 SSH 密钥登录
-打开 [GitHub 密钥管理页面](https://github.com/settings/ssh/new) 添加你的公钥
+# SSH 密钥登录一键配置脚本
+通过 GitHub 获取公钥，并自动配置。
 
-然后输入以下命令
+## 使用方法
+在 [GitHub 密钥管理页面](https://github.com/settings/keys) 添加公钥，然后输入以下命令：
 ```
-bash <(curl -L -s https://raw.githubusercontent.com/P3TERX/SSH-Key-Installer/master/ikey.sh) GitHub_ID -p -a
+bash <(curl -Ls https://git.io/ikey.sh) GitHub_ID
 ```
-`GitHub_ID` 是你的GitHub用户名。
 
-`-p` 参数为关闭密码登录。建议首次使用不要加入，先测试密钥是否能登录成功。
+`GitHub_ID` 为 GitHub 用户名。
 
-`-a` 参数为追加密钥。不加则默认直接覆盖原有的密钥。
+附加选项：
+
+`-p` 禁用密码登录。确认密钥能正常登录，再使用此选项。
+
+`-a` 追加密钥模式。在已有的密钥后面追加，而不是覆盖。
