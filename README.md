@@ -2,15 +2,14 @@
 通过 GitHub 获取公钥，并自动配置。
 
 ## 使用方法
-在 [GitHub 密钥管理页面](https://github.com/settings/keys) 添加公钥，然后输入以下命令：
+在 [GitHub 密钥管理页面](https://github.com/settings/keys) 添加公钥，然后在需要配置密钥的主机上输入以下命令即可。
 ```
 bash <(curl -Ls https://git.io/ikey.sh) GitHub_ID
 ```
+> `GitHub_ID` 为 GitHub 用户名。
 
-`GitHub_ID` 为 GitHub 用户名。
+## 高级选项
 
-附加选项：
+`-o` 覆盖密钥
 
-`-p` 禁用密码登录。确认密钥能正常登录，再使用此选项。
-
-`-a` 追加密钥模式。在已有的密钥后面追加，而不是覆盖。
+`-p` 禁用密码

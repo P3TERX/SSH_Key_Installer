@@ -1,35 +1,38 @@
 #!/bin/bash
 #Description: Install SSH key from GitHub Account
-#Version: 1.0
+#Version: 1.1
 #Author: P3TERX
 #Blog: https://p3terx.com
 
 KEY_ID=${1}
 DISABLE_PW_LOGIN=0
-KEY_ADD=0
-USAGE='- Usage: bash <(curl -Ls https://git.io/ikey.sh) {GitHub_ID} [-p] [-a]'
+KEY_ADD=1
+USAGE='Usage: bash <(curl -Ls https://git.io/ikey.sh) {GitHub_ID} [-o] [-p]'
 
 echo "Welcome to SSH Key Installer"
 
-if [ $# -eq 0 -o $# -gt 3 ]; then
+if [ $# -eq 0 ]; then
 	echo "Install SSH key from GitHub Account."
+	echo $USAGE; exit 1;
+elif [ $# -gt 3 ]; then
+	echo "Error: Please enter the correct parameters."
 	echo $USAGE; exit 1;
 fi
 
 if [ "$2" == '-p' ]; then
 	DISABLE_PW_LOGIN=1
-elif [ "$2" == '-a' ]; then
-	KEY_ADD=1
-elif [ $2 ]; then
+elif [ "$2" == '-o' ]; then
+	KEY_ADD=0
+elif [ "$2" != '' ]; then
 	echo "Error: Please enter the correct parameters."
 	echo $USAGE; exit 1;
 fi
 
 if [ "$3" == '-p' ]; then
 	DISABLE_PW_LOGIN=1
-elif [ "$3" == '-a' ]; then
-	KEY_ADD=1
-elif [ $3 ]; then
+elif [ "$3" == '-o' ]; then
+	KEY_ADD=0
+elif [ "$3" != '' ]; then
 	echo "Error: Please enter the correct parameters."
 	echo $USAGE; exit 1;
 fi
@@ -47,9 +50,9 @@ curl https://github.com/${KEY_ID}.keys >/tmp/key.txt 2>/dev/null
 PUB_KEY=$(cat /tmp/key.txt)
 
 if [ "${PUB_KEY}" == 'Not Found' ]; then
-	echo "Error: GitHub account not found"; exit 1;
+	echo "Error: GitHub account not found."; exit 1;
 elif [ "${PUB_KEY}" == '' ]; then
-	echo "Error: Key not found"; exit 1;
+	echo "Error: This account does not have an SSH key."; exit 1;
 fi
 
 if [ ! -f "${HOME}/.ssh/authorized_keys" ]; then
@@ -60,7 +63,7 @@ if [ ! -f "${HOME}/.ssh/authorized_keys" ]; then
 	touch ${HOME}/.ssh/authorized_keys
 
 	if [ ! -f "${HOME}/.ssh/authorized_keys" ]; then
-		echo "Failed to create SSH key file"
+		echo "Failed to create SSH key file."
 	else
 		echo "Key file created, proceeding..."
 	fi
@@ -68,9 +71,10 @@ fi
 
 #install key
 if [ ${KEY_ADD} -eq 1 ]; then
-	echo "Additional SSH key..."
+	echo "Adding SSH key..."
 	echo -e "\n${PUB_KEY}\n" >> ${HOME}/.ssh/authorized_keys
 else
+	echo "Overwriting SSH key..."
 	echo -e "${PUB_KEY}\n" > ${HOME}/.ssh/authorized_keys
 fi
 rm -rf /tmp/key.txt
@@ -80,7 +84,7 @@ echo "SSH Key installed successfully!"
 
 #disable root password
 if [ ${DISABLE_PW_LOGIN} -eq 1 ]; then
-	echo "Disabled password login in SSH"
+	echo "Disabled password login in SSH."
 	sed -i "/PasswordAuthentication no/c PasswordAuthentication no" /etc/ssh/sshd_config
 	sed -i "/PasswordAuthentication yes/c PasswordAuthentication no" /etc/ssh/sshd_config
 	service sshd restart
