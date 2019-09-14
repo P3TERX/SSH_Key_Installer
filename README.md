@@ -1,15 +1,23 @@
-# SSH 密钥登录一键配置脚本
-通过 GitHub 获取公钥，并自动配置。
+# SSH Key Installer
 
-## 使用方法
-在 [GitHub 密钥管理页面](https://github.com/settings/keys) 添加公钥，然后在需要配置密钥的主机上输入以下命令即可。
+Install SSH keys via GitHub, URL or local files
+
+[中文教程](https://p3terx.com/archives/ssh-key-installer.html)
+
+## Usage
+
 ```
-bash <(curl -Ls https://git.io/ikey.sh) GitHub_ID
+bash <(curl -Ls git.io/ikey.sh) [options...] <arg>
 ```
-> `GitHub_ID` 为 GitHub 用户名。
 
-## 高级选项
+## Options
 
-`-o` 覆盖密钥
+`-o` - Overwrite mode, this option is valid at the top
 
-`-p` 禁用密码
+`-g` - Get the public key from GitHub, the arguments GitHub ID
+
+`-u` - Get the public key from the URL, the arguments is the URL
+
+`-l` - Get the public key from the local file, the arguments is the local file path
+
+`-d` - Disable password login
