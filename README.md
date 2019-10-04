@@ -14,7 +14,7 @@ bash <(curl -Ls git.io/ikey.sh) [options...] <arg>
 
 `-o` - Overwrite mode, this option is valid at the top
 
-`-g` - Get the public key from GitHub, the arguments GitHub ID
+`-g` - Get the public key from GitHub, the arguments is the GitHub ID
 
 `-u` - Get the public key from the URL, the arguments is the URL
 

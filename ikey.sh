@@ -1,6 +1,6 @@
 #!/bin/bash
 #Description: Install SSH keys via GitHub, URL or local files
-#Version: 2.0
+#Version: 2.1
 #Author: P3TERX
 #Blog: https://p3terx.com
 
@@ -11,7 +11,7 @@ USAGE () {
 	echo "  bash <(curl -Ls git.io/ikey.sh) [options...] <arg>"
 	echo "Options:"
 	echo "  -o	Overwrite mode, this option is valid at the top"
-	echo "  -g	Get the public key from GitHub, the arguments GitHub ID"
+	echo "  -g	Get the public key from GitHub, the arguments is the GitHub ID"
 	echo "  -u	Get the public key from the URL, the arguments is the URL"
 	echo "  -l	Get the public key from the local file, the arguments is the local file path"
 	echo "  -d	Disable password login"
@@ -81,10 +81,11 @@ install_key () {
 }
 
 disable_password () {
+	[ $EUID != 0 ] && SUDO=sudo
 	echo "Disabled password login in SSH."
-	sudo sed -i '/PasswordAuthentication /c\PasswordAuthentication no' /etc/ssh/sshd_config
+	$SUDO sed -i '/PasswordAuthentication /c\PasswordAuthentication no' /etc/ssh/sshd_config
 	echo "Restarting sshd..."
-	sudo service sshd restart
+	$SUDO service sshd restart
 	[ $? == 0 ] && echo "Done."
 }
 
