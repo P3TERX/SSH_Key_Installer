@@ -1,6 +1,6 @@
 #!/bin/bash
 #Description: Install SSH keys via GitHub, URL or local files
-#Version: 2.1
+#Version: 2.2
 #Author: P3TERX
 #Blog: https://p3terx.com
 
@@ -81,12 +81,18 @@ install_key () {
 }
 
 disable_password () {
-	[ $EUID != 0 ] && SUDO=sudo
-	echo "Disabled password login in SSH."
-	$SUDO sed -i '/PasswordAuthentication /c\PasswordAuthentication no' /etc/ssh/sshd_config
-	echo "Restarting sshd..."
-	$SUDO service sshd restart
-	[ $? == 0 ] && echo "Done."
+	if [ $(uname -o) == Android ]; then
+		echo "Disabled password login in SSH."
+		sed -i '/PasswordAuthentication /c\PasswordAuthentication no' $PREFIX/etc/ssh/sshd_config
+		[ $? == 0 ] && echo "Restart sshd or Termux App to take effect."
+	else
+		[ $EUID != 0 ] && SUDO=sudo
+		echo "Disabled password login in SSH."
+		$SUDO sed -i '/PasswordAuthentication /c\PasswordAuthentication no' /etc/ssh/sshd_config
+		echo "Restarting sshd..."
+		$SUDO service sshd restart
+		[ $? == 0 ] && echo "Done."
+	fi
 }
 
 while getopts "og:u:l:d" OPT; do
