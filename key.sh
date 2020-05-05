@@ -2,12 +2,12 @@
 #=============================================================
 # https://github.com/P3TERX/SSH_Key_Installer
 # Description: Install SSH keys via GitHub, URL or local files
-# Version: 2.5
+# Version: 2.6
 # Author: P3TERX
 # Blog: https://p3terx.com
 #=============================================================
 
-VERSION=2.5
+VERSION=2.6
 
 USAGE() {
     echo "
@@ -97,13 +97,16 @@ change_port() {
         [[ -z $(grep "Port " "$PREFIX/etc/ssh/sshd_config") ]] &&
             echo "Port ${SSH_PORT}" >>$PREFIX/etc/ssh/sshd_config ||
             sed -i "s@.*\(Port \).*@\1${SSH_PORT}@" $PREFIX/etc/ssh/sshd_config
-        [[ $(grep "Port " "$PREFIX/etc/ssh/sshd_config") ]] &&
+        [[ $(grep "Port " "$PREFIX/etc/ssh/sshd_config") ]] && {
             echo "SSH port changed successfully !"
+            RESTART_SSHD=2
+        } || RESTART_SSHD=0
+
     else
-        $SUDO sed -i "s@.*\(Port \).*@\1${SSH_PORT}@" /etc/ssh/sshd_config &&
+        $SUDO sed -i "s@.*\(Port \).*@\1${SSH_PORT}@" /etc/ssh/sshd_config && {
             echo "SSH port changed successfully !"
-        echo "Restarting sshd..."
-        $SUDO service sshd restart && echo "Done."
+            RESTART_SSHD=1
+        } || RESTART_SSHD=0
     fi
 }
 
@@ -111,12 +114,13 @@ disable_password() {
     echo "Disabled password login in SSH."
     if [ $(uname -o) == Android ]; then
         sed -i "s@.*\(PasswordAuthentication \).*@\1no@" $PREFIX/etc/ssh/sshd_config &&
-            echo "Restart sshd or Termux App to take effect."
+            RESTART_SSHD=2 ||
+            RESTART_SSHD=0
     else
         [ $EUID != 0 ] && SUDO=sudo
-        $SUDO sed -i "s@.*\(PasswordAuthentication \).*@\1no@" /etc/ssh/sshd_config
-        echo "Restarting sshd..."
-        $SUDO service sshd restart && echo "Done."
+        $SUDO sed -i "s@.*\(PasswordAuthentication \).*@\1no@" /etc/ssh/sshd_config &&
+            RESTART_SSHD=1 ||
+            RESTART_SSHD=0
     fi
 }
 
@@ -161,3 +165,10 @@ while getopts "og:u:f:p:d" OPT; do
         ;;
     esac
 done
+
+if [ "$RESTART_SSHD" = 1 ]; then
+    echo "Restarting sshd..."
+    $SUDO systemctl restart sshd && echo "Done."
+elif [ "$RESTART_SSHD" = 2 ]; then
+    echo "Restart sshd or Termux App to take effect."
+fi
