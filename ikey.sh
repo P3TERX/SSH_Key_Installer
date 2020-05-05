@@ -2,7 +2,7 @@
 #=============================================================
 # https://github.com/P3TERX/SSH_Key_Installer
 # Description: Install SSH keys via GitHub, URL or local files
-# Version: 2.3
+# Version: 2.4
 # Author: P3TERX
 # Blog: https://p3terx.com
 #=============================================================
@@ -10,14 +10,18 @@
 KEY_ADD=1
 
 USAGE() {
-    echo "Usage:"
-    echo "  bash <(curl -Ls git.io/ikey.sh) [options...] <arg>"
-    echo "Options:"
-    echo "  -o	Overwrite mode, this option is valid at the top"
-    echo "  -g	Get the public key from GitHub, the arguments is the GitHub ID"
-    echo "  -u	Get the public key from the URL, the arguments is the URL"
-    echo "  -l	Get the public key from the local file, the arguments is the local file path"
-    echo "  -d	Disable password login"
+    echo "
+Usage:
+  bash <(curl -Ls git.io/ikey.sh) [options...] <arg>
+
+Options:
+  -o	Overwrite mode, this option is valid at the top
+  -g	Get the public key from GitHub, the arguments is the GitHub ID
+  -u	Get the public key from the URL, the arguments is the URL
+  -l	Get the public key from the local file, the arguments is the local file path
+  -p	Change SSH port, the arguments is port number
+  -d	Disable password login
+"
 }
 
 if [ $# -eq 0 ]; then
@@ -85,6 +89,12 @@ install_key() {
     [ $? == 0 ] && echo "SSH Key installed successfully!"
 }
 
+change_port() {
+    echo "Changing SSH port to ${SSH_PORT} ..."
+    $SUDO sed -i "s@.*\(Port \).*@\1${SSH_PORT}@" /etc/ssh/sshd_config
+    echo "SSH port changed successfully !"
+}
+
 disable_password() {
     if [ $(uname -o) == Android ]; then
         echo "Disabled password login in SSH."
@@ -100,7 +110,7 @@ disable_password() {
     fi
 }
 
-while getopts "og:u:l:d" OPT; do
+while getopts "og:u:l:p:d" OPT; do
     case $OPT in
     o)
         KEY_ADD=0
@@ -119,6 +129,10 @@ while getopts "og:u:l:d" OPT; do
         KEY_PATH=$OPTARG
         get_loacl_key
         install_key
+        ;;
+    p)
+        SSH_PORT=$OPTARG
+        change_port
         ;;
     d)
         disable_password
