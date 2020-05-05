@@ -11,17 +11,18 @@ Install SSH keys via GitHub, URL or local files
 ## Usage
 
 ```
-bash <(curl -Ls git.io/ikey.sh) [options...] <arg>
+bash <(curl -fsSL git.io/key.sh) [options...] <arg>
 ```
 
 ## Options
 
-`-o` - Overwrite mode, this option is valid at the top
+* `-o` - Overwrite mode, this option is valid at the top
+* `-g` - Get the public key from GitHub, the arguments is the GitHub ID
+* `-u` - Get the public key from the URL, the arguments is the URL
+* `-f` - Get the public key from the local file, the arguments is the local file path
+* `-p` - Change SSH port, the arguments is port number
+* `-d` - Disable password login
 
-`-g` - Get the public key from GitHub, the arguments is the GitHub ID
+## Lisence
 
-`-u` - Get the public key from the URL, the arguments is the URL
-
-`-l` - Get the public key from the local file, the arguments is the local file path
-
-`-d` - Disable password login
+[MIT](https://github.com/P3TERX/SSH_Key_Installer/blob/master/LICENSE) © P3TERX
