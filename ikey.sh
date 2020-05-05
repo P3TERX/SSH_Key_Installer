@@ -2,15 +2,17 @@
 #=============================================================
 # https://github.com/P3TERX/SSH_Key_Installer
 # Description: Install SSH keys via GitHub, URL or local files
-# Version: 2.4
+# Version: 2.5
 # Author: P3TERX
 # Blog: https://p3terx.com
 #=============================================================
 
-KEY_ADD=1
+VERSION=2.5
 
 USAGE() {
     echo "
+SSH Key Installer $VERSION
+
 Usage:
   bash <(curl -Ls git.io/ikey.sh) [options...] <arg>
 
@@ -18,10 +20,9 @@ Options:
   -o	Overwrite mode, this option is valid at the top
   -g	Get the public key from GitHub, the arguments is the GitHub ID
   -u	Get the public key from the URL, the arguments is the URL
-  -l	Get the public key from the local file, the arguments is the local file path
+  -f	Get the public key from the local file, the arguments is the local file path
   -p	Change SSH port, the arguments is port number
-  -d	Disable password login
-"
+  -d	Disable password login"
 }
 
 if [ $# -eq 0 ]; then
@@ -36,7 +37,7 @@ get_github_key() {
     fi
     echo "The GitHub account is: ${KEY_ID}"
     echo "Get key from GitHub..."
-    PUB_KEY=$(curl -Ls https://github.com/${KEY_ID}.keys)
+    PUB_KEY=$(curl -fsSL https://github.com/${KEY_ID}.keys)
     if [ "${PUB_KEY}" == 'Not Found' ]; then
         echo "Error: GitHub account not found."
         exit 1
@@ -52,7 +53,7 @@ get_url_key() {
         [ "${KEY_URL}" == '' ] && echo "Error: Invalid input." && exit 1
     fi
     echo "Get key from URL..."
-    PUB_KEY=$(curl -Ls ${KEY_URL})
+    PUB_KEY=$(curl -fsSL ${KEY_URL})
 }
 
 get_loacl_key() {
@@ -77,43 +78,52 @@ install_key() {
             echo "Key file created, proceeding..."
         fi
     fi
-    if [ ${KEY_ADD} -eq 1 ]; then
-        echo "Adding SSH key..."
-        echo -e "\n${PUB_KEY}\n" >>${HOME}/.ssh/authorized_keys
-    else
+    if [ "${OVERWRITE}" == 1 ]; then
         echo "Overwriting SSH key..."
         echo -e "${PUB_KEY}\n" >${HOME}/.ssh/authorized_keys
+    else
+        echo "Adding SSH key..."
+        echo -e "\n${PUB_KEY}\n" >>${HOME}/.ssh/authorized_keys
     fi
     chmod 700 ${HOME}/.ssh/
     chmod 600 ${HOME}/.ssh/authorized_keys
-    [ $? == 0 ] && echo "SSH Key installed successfully!"
+    [[ $(grep "${PUB_KEY}" "${HOME}/.ssh/authorized_keys") ]] &&
+        echo "SSH Key installed successfully!"
 }
 
 change_port() {
     echo "Changing SSH port to ${SSH_PORT} ..."
-    $SUDO sed -i "s@.*\(Port \).*@\1${SSH_PORT}@" /etc/ssh/sshd_config
-    echo "SSH port changed successfully !"
-}
-
-disable_password() {
     if [ $(uname -o) == Android ]; then
-        echo "Disabled password login in SSH."
-        sed -i "s@.*\(PasswordAuthentication \).*@\1no@" $PREFIX/etc/ssh/sshd_config
-        [ $? == 0 ] && echo "Restart sshd or Termux App to take effect."
+        [[ -z $(grep "Port " "$PREFIX/etc/ssh/sshd_config") ]] &&
+            echo "Port ${SSH_PORT}" >>$PREFIX/etc/ssh/sshd_config ||
+            sed -i "s@.*\(Port \).*@\1${SSH_PORT}@" $PREFIX/etc/ssh/sshd_config
+        [[ $(grep "Port " "$PREFIX/etc/ssh/sshd_config") ]] &&
+            echo "SSH port changed successfully !"
     else
-        [ $EUID != 0 ] && SUDO=sudo
-        echo "Disabled password login in SSH."
-        $SUDO sed -i "s@.*\(PasswordAuthentication \).*@\1no@" /etc/ssh/sshd_config
+        $SUDO sed -i "s@.*\(Port \).*@\1${SSH_PORT}@" /etc/ssh/sshd_config &&
+            echo "SSH port changed successfully !"
         echo "Restarting sshd..."
-        $SUDO service sshd restart
-        [ $? == 0 ] && echo "Done."
+        $SUDO service sshd restart && echo "Done."
     fi
 }
 
-while getopts "og:u:l:p:d" OPT; do
+disable_password() {
+    echo "Disabled password login in SSH."
+    if [ $(uname -o) == Android ]; then
+        sed -i "s@.*\(PasswordAuthentication \).*@\1no@" $PREFIX/etc/ssh/sshd_config &&
+            echo "Restart sshd or Termux App to take effect."
+    else
+        [ $EUID != 0 ] && SUDO=sudo
+        $SUDO sed -i "s@.*\(PasswordAuthentication \).*@\1no@" /etc/ssh/sshd_config
+        echo "Restarting sshd..."
+        $SUDO service sshd restart && echo "Done."
+    fi
+}
+
+while getopts "og:u:f:p:d" OPT; do
     case $OPT in
     o)
-        KEY_ADD=0
+        OVERWRITE=1
         ;;
     g)
         KEY_ID=$OPTARG
@@ -125,7 +135,7 @@ while getopts "og:u:l:p:d" OPT; do
         get_url_key
         install_key
         ;;
-    l)
+    f)
         KEY_PATH=$OPTARG
         get_loacl_key
         install_key
