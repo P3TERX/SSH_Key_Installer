@@ -9,7 +9,7 @@
 
 KEY_ADD=1
 
-USAGE () {
+USAGE() {
     echo "Usage:"
     echo "  bash <(curl -Ls git.io/ikey.sh) [options...] <arg>"
     echo "Options:"
@@ -25,8 +25,8 @@ if [ $# -eq 0 ]; then
     exit 1
 fi
 
-get_github_key () {
-    if [ "${KEY_ID}" == '' ] ; then
+get_github_key() {
+    if [ "${KEY_ID}" == '' ]; then
         read -e -p "Please enter the GitHub account:" KEY_ID
         [ "${KEY_ID}" == '' ] && echo "Error: Invalid input." && exit 1
     fi
@@ -34,14 +34,16 @@ get_github_key () {
     echo "Get key from GitHub..."
     PUB_KEY=$(curl -Ls https://github.com/${KEY_ID}.keys)
     if [ "${PUB_KEY}" == 'Not Found' ]; then
-        echo "Error: GitHub account not found."; exit 1;
+        echo "Error: GitHub account not found."
+        exit 1
     elif [ "${PUB_KEY}" == '' ]; then
-        echo "Error: This account ssh key does not exist."; exit 1;
+        echo "Error: This account ssh key does not exist."
+        exit 1
     fi
 }
 
-get_url_key () {
-    if [ "${KEY_URL}" == '' ] ; then
+get_url_key() {
+    if [ "${KEY_URL}" == '' ]; then
         read -e -p "Please enter the URL:" KEY_URL
         [ "${KEY_URL}" == '' ] && echo "Error: Invalid input." && exit 1
     fi
@@ -49,19 +51,19 @@ get_url_key () {
     PUB_KEY=$(curl -Ls ${KEY_URL})
 }
 
-get_loacl_key () {
-    if [ "${KEY_PATH}" == '' ] ; then
+get_loacl_key() {
+    if [ "${KEY_PATH}" == '' ]; then
         read -e -p "Please enter the path:" KEY_PATH
         [ "${KEY_PATH}" == '' ] && echo "Error: Invalid input." && exit 1
     fi
-    echo "Get key from `${KEY_PATH}`..."
+    echo "Get key from $(${KEY_PATH})..."
     PUB_KEY=$(cat ${KEY_PATH})
 }
 
-install_key () {
+install_key() {
     [ "${PUB_KEY}" == '' ] && echo "Error: ssh key does not exist." && exit 1
     if [ ! -f "${HOME}/.ssh/authorized_keys" ]; then
-        echo "${HOME}/.ssh/authorized_keys is missing...";
+        echo "${HOME}/.ssh/authorized_keys is missing..."
         echo "Creating ${HOME}/.ssh/authorized_keys..."
         mkdir -p ${HOME}/.ssh/
         touch ${HOME}/.ssh/authorized_keys
@@ -73,17 +75,17 @@ install_key () {
     fi
     if [ ${KEY_ADD} -eq 1 ]; then
         echo "Adding SSH key..."
-        echo -e "\n${PUB_KEY}\n" >> ${HOME}/.ssh/authorized_keys
+        echo -e "\n${PUB_KEY}\n" >>${HOME}/.ssh/authorized_keys
     else
         echo "Overwriting SSH key..."
-        echo -e "${PUB_KEY}\n" > ${HOME}/.ssh/authorized_keys
+        echo -e "${PUB_KEY}\n" >${HOME}/.ssh/authorized_keys
     fi
     chmod 700 ${HOME}/.ssh/
     chmod 600 ${HOME}/.ssh/authorized_keys
     [ $? == 0 ] && echo "SSH Key installed successfully!"
 }
 
-disable_password () {
+disable_password() {
     if [ $(uname -o) == Android ]; then
         echo "Disabled password login in SSH."
         sed -i "s@.*\(PasswordAuthentication \).*@\1no@" $PREFIX/etc/ssh/sshd_config
