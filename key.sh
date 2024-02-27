@@ -84,20 +84,20 @@ install_key() {
             echo -e "${INFO} Key file created, proceeding..."
         fi
     fi
-    if [ "${OVERWRITE}" == 1 ]; then
-        echo -e "${INFO} Overwriting SSH key..."
-        echo -e "${PUB_KEY}\n" >${HOME}/.ssh/authorized_keys
+    if grep -q -F "${PUB_KEY}" "${HOME}/.ssh/authorized_keys"; then
+        echo -e "${INFO} SSH Key already installed."
     else
-        echo -e "${INFO} Adding SSH key..."
-        echo -e "\n${PUB_KEY}\n" >>${HOME}/.ssh/authorized_keys
+        if [ "${OVERWRITE}" == 1 ]; then
+            echo -e "${INFO} Overwriting SSH key..."
+            echo -e "${PUB_KEY}\n" >${HOME}/.ssh/authorized_keys
+        else
+            echo -e "${INFO} Adding SSH key..."
+            echo -e "${PUB_KEY}\n" >>${HOME}/.ssh/authorized_keys
+        fi
+        chmod 700 ${HOME}/.ssh/
+        chmod 600 ${HOME}/.ssh/authorized_keys
+        echo -e "${INFO} SSH Key installed successfully!"
     fi
-    chmod 700 ${HOME}/.ssh/
-    chmod 600 ${HOME}/.ssh/authorized_keys
-    [[ $(grep "${PUB_KEY}" "${HOME}/.ssh/authorized_keys") ]] &&
-        echo -e "${INFO} SSH Key installed successfully!" || {
-        echo -e "${ERROR} SSH key installation failed!"
-        exit 1
-    }
 }
 
 change_port() {
